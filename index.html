@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>IFSP Moto Kart 64</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Russo+One&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="flash"></div>
+
+  <!-- TELA INICIAL -->
+  <section id="scr-title" class="screen">
+    <div class="logo">
+      <div class="logo-ifsp">IFSP<span class="flag"></span></div>
+      <div class="logo-moto">MOTO KART</div>
+      <div class="logo-64">64</div>
+    </div>
+    <div class="press-start blink">▶ PRESSIONE START</div>
+    <div class="menu title-menu">
+      <button data-act="start" class="btn big">INICIAR</button>
+      <button data-act="options" class="btn">OPÇÕES</button>
+    </div>
+    <div class="credits">Campus Birigui • Enter/Espaço para começar</div>
+  </section>
+
+  <!-- MODOS -->
+  <section id="scr-mode" class="screen">
+    <h1 class="banner">ESCOLHA O MODO</h1>
+    <div class="cards">
+      <button class="card" data-mode="quick"><div class="ico">🏁</div><b>CORRIDA RÁPIDA</b><small>Escolha o piloto e corra contra 3 rivais.</small></button>
+      <button class="card" data-mode="champ"><div class="ico">🏆</div><b>CAMPEONATO</b><small>3 corridas: manhã, tarde e noite. Some pontos!</small></button>
+      <button class="card" data-mode="duel"><div class="ico">🎓</div><b>CONTRA O PROFESSOR</b><small>Cauã x Prof. Renato. Só um passa de ano.</small></button>
+    </div>
+    <button class="btn back" data-act="back">◀ VOLTAR</button>
+  </section>
+
+  <!-- SELEÇÃO DE PILOTO -->
+  <section id="scr-select" class="screen">
+    <h1 class="banner">SELECIONE SEU PILOTO</h1>
+    <button class="arrow left" data-act="prev">◀</button>
+    <button class="arrow right" data-act="next">▶</button>
+    <div class="plate">
+      <div class="plate-name" id="sel-name">CAUÃ</div>
+      <div class="plate-bike" id="sel-bike">TRIUMPH TRIDENT 660</div>
+      <div class="stats" id="sel-stats"></div>
+      <div class="plate-quote" id="sel-quote"></div>
+    </div>
+    <div class="bottom-row">
+      <button class="btn back" data-act="back">◀ VOLTAR</button>
+      <button class="btn big ok" data-act="confirm">CONFIRMAR ▶</button>
+    </div>
+  </section>
+
+  <!-- SELEÇÃO DE MAPA -->
+  <section id="scr-map" class="screen">
+    <h1 class="banner">MAPA: IFSP BIRIGUI</h1>
+    <div class="map-info">
+      <div class="map-sectors">
+        <b>Setores do circuito</b>
+        <ol>
+          <li>Largada no estacionamento</li>
+          <li>Reta da entrada do IFSP</li>
+          <li>Curva dos blocos de aula</li>
+          <li>Trecho dos laboratórios</li>
+          <li>Setor dos painéis solares</li>
+          <li>Curvas do gramado</li>
+          <li>Reta final</li>
+        </ol>
+      </div>
+      <div class="map-variants" id="map-variants">
+        <b>Horário</b>
+        <button class="chip" data-variant="0">☀️ MANHÃ</button>
+        <button class="chip" data-variant="1">🌇 TARDE</button>
+        <button class="chip" data-variant="2">🌙 NOITE</button>
+      </div>
+    </div>
+    <div class="bottom-row">
+      <button class="btn back" data-act="back">◀ VOLTAR</button>
+      <button class="btn big ok" data-act="go">CORRER! ▶</button>
+    </div>
+  </section>
+
+  <!-- OPÇÕES -->
+  <section id="scr-options" class="screen">
+    <h1 class="banner">OPÇÕES</h1>
+    <div class="options">
+      <label>Música <select id="opt-music"><option value="1">Ligada</option><option value="0">Desligada</option></select></label>
+      <label>Efeitos sonoros <select id="opt-sfx"><option value="1">Ligados</option><option value="0">Desligados</option></select></label>
+      <label>Visual retrô <select id="opt-retro"><option value="240">Forte (240p)</option><option value="360">Médio (360p)</option><option value="0">Desligado (nativo)</option></select></label>
+      <label>Dificuldade <select id="opt-diff"><option value="0">Calouro (fácil)</option><option value="1">Veterano (normal)</option><option value="2">Doutorado (difícil)</option></select></label>
+    </div>
+    <div class="controls-help">
+      <b>Controles</b>
+      W / ↑ acelerar • S / ↓ frear • A D / ← → virar • Espaço derrapar • Shift usar item • Esc pausar
+    </div>
+    <button class="btn back" data-act="back">◀ VOLTAR</button>
+  </section>
+
+  <!-- HUD -->
+  <section id="hud" class="hidden">
+    <div class="hud-lap"><span id="hud-lap">1/3</span><small>VOLTA</small></div>
+    <div class="hud-right">
+      <div class="hud-time" id="hud-time">00:00.00</div>
+      <div class="hud-pos" id="hud-pos">1<sup>º</sup><small>/4</small></div>
+    </div>
+    <div class="hud-item" id="hud-item"><div class="slot" id="hud-item-slot"></div><small>SHIFT</small></div>
+    <canvas id="minimap" width="200" height="200"></canvas>
+    <div class="hud-speed"><span id="hud-speed">0</span><small>KM/H</small><div class="bar"><div id="hud-speed-bar"></div></div></div>
+    <div class="hud-msg" id="hud-msg"></div>
+    <div class="hud-count" id="hud-count"></div>
+    <div class="hud-status" id="hud-status"></div>
+  </section>
+
+  <!-- PAUSA -->
+  <section id="scr-pause" class="screen dim">
+    <h1 class="banner">PAUSA</h1>
+    <div class="menu">
+      <button class="btn big" data-act="resume">CONTINUAR</button>
+      <button class="btn" data-act="restart">REINICIAR</button>
+      <button class="btn" data-act="quit">SAIR PARA O MENU</button>
+    </div>
+  </section>
+
+  <!-- RESULTADO -->
+  <section id="scr-results" class="screen">
+    <h1 class="banner" id="res-title">1º LUGAR!</h1>
+    <div class="res-msg" id="res-msg"></div>
+    <table class="res-table" id="res-table"></table>
+    <div class="bottom-row" id="res-buttons"></div>
+  </section>
+
+  <!-- CONTROLES TOUCH -->
+  <div id="touch" class="hidden">
+    <div class="tl">
+      <button data-key="left">◀</button>
+      <button data-key="right">▶</button>
+    </div>
+    <div class="tr">
+      <button data-key="item" class="t-item">ITEM</button>
+      <button data-key="drift" class="t-drift">DRIFT</button>
+      <button data-key="brake" class="t-brake">FREIO</button>
+      <button data-key="gas" class="t-gas">ACEL</button>
+    </div>
+    <button data-key="pause" class="t-pause">II</button>
+  </div>
+
+  <div id="loading">CARREGANDO O CAMPUS...</div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
