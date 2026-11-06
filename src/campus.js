@@ -179,17 +179,17 @@ export class Campus {
     // portas de vidro
     this.box(10, 3.6, 0.3, lam(0x2f5b8a, { emissive: 0x0a1a2a }), 0, 1.8, 24.1);
     // letreiro INSTITUTO FEDERAL
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(22, 3.2), new THREE.MeshBasicMaterial({ map: textTexture([
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(19, 2.8), new THREE.MeshBasicMaterial({ map: textTexture([
       { text: 'INSTITUTO FEDERAL', font: 'bold 40px Arial Black, sans-serif', color: '#1a1a1a' },
     ], { w: 512, h: 72, bg: '#f4f4f0' }) }));
-    sign.position.set(0, 7.6, 24.1);
+    sign.position.set(1.8, 7.6, 24.1);
     this.group.add(sign);
     const sub = new THREE.Mesh(new THREE.PlaneGeometry(14, 1.4), new THREE.MeshBasicMaterial({ map: textTexture('São Paulo • Campus Birigui', { w: 512, h: 52, bg: '#f4f4f0', fg: '#1fa83a', font: 'bold 34px Arial, sans-serif' }) }));
-    sub.position.set(0, 5.7, 24.12);
+    sub.position.set(1.8, 5.7, 24.12);
     this.group.add(sub);
     // logo IF na fachada
-    const logo = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), new THREE.MeshBasicMaterial({ map: ifLogoTexture(false) }));
-    logo.position.set(-10.5, 7.2, 24.13);
+    const logo = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ map: ifLogoTexture(false) }));
+    logo.position.set(-10.6, 7.0, 24.13);
     this.group.add(logo);
     // calçada ao redor
     this.flat(100, 46, 0, 10, new THREE.MeshLambertMaterial({ map: (() => { const t = Tex.sidewalk().clone(); t.needsUpdate = true; t.repeat.set(30, 14); return t; })() }), 0.012);

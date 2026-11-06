@@ -1,70 +1,57 @@
 # IFSP MOTO KART 64: Progresso do desenvolvimento
 
-Último checkpoint: 05/11/2026.
-Estado: **o jogo ainda NÃO roda.** Os módulos de base estão escritos e passam na checagem de sintaxe, mas `src/main.js` (o ponto de entrada que o `index.html` carrega) ainda não existe. Nada foi testado no navegador.
+Último checkpoint: 06/11/2026.
+Estado: **o jogo é jogável do começo ao fim.** Menu → modo → seleção de piloto → mapa → contagem → corrida de 3 voltas com IA e itens → resultado/pódio. Os três modos foram testados no navegador.
 
-## Stack
-
-- Vite 5 + Three.js 0.169 (instalados em `node_modules`)
-- JavaScript (ES modules), HTML5, CSS3
-- Sem modelos 3D externos: tudo é feito com primitivas e texturas geradas em canvas
-
-## ✅ Já implementado (arquivos completos)
-
-| Arquivo | Conteúdo |
-|---|---|
-| `package.json` | Scripts `dev`, `build`, `preview`; dependências three + vite |
-| `index.html` | Todas as telas em DOM: título, modos, seleção de piloto, seleção de mapa (manhã/tarde/noite), opções, HUD (volta, tempo, posição, item, minimapa, velocímetro, mensagens, contagem), pausa, resultado, controles de toque. Carrega `/src/main.js` |
-| `src/style.css` | Visual dos menus inspirado em N64 (fontes grossas com contorno, botões, cards), HUD, pódio/tabela, controles mobile, layout responsivo |
-| `src/textures.js` | Texturas procedurais: grama, asfalto com faixa central, zebra, quadriculado, estacionamento, calçada, terra vermelha, canavial, fachadas com janelas, telhado, painel solar, caixa "?", placa de turbo, faixa de perigo. Também placas de texto, logo estilizado do IF e emojis como textura |
-| `src/track.js` | Classe `Track`: spline fechada (CatmullRom) a partir de `CONTROL_POINTS` (layout do campus), amostragem com tangentes e curvatura, `project()` (posição → índice/lateral na pista), `pointAt()`, `heading()`, `curvAhead()`, malha da pista (asfalto, acostamento, zebras só nas curvas, linha de largada). Constantes `TRACK_WIDTH = 18` e `WALL_DIST` (muro invisível) |
-| `src/campus.js` | Classe `Campus` e `VARIANTS` (manhã/tarde/noite, com céu, neblina, luz e janelas/postes acesos à noite). Constrói: céu em gradiente, nuvens, estrelas, chão; prédio principal com letreiro "INSTITUTO FEDERAL", marquise e logo IF; blocos A–D com passarelas; biblioteca; laboratórios com telhado shed; caixa d'água; usina solar (dentro e fora da pista); estacionamento com carros e guarita; pórtico "IFSP • CAMPUS BIRIGUI" sobre a pista; totem IF; bandeiras; placas humorísticas; postes; rampas; placas de turbo; posições das fileiras de caixas de item (`track.features`); cones derrubáveis; pilhas de pneus; cerca de ~420 árvores instanciadas (com ipês); canaviais, morros e cerca do campus. Expõe `colliders`, `cones`, `setVariant(i)`, `update(dt)` |
-| `src/models.js` | `buildCharacter(def)`: bonecos cabeçudos com articulações (quadril, tronco, cabeça, ombros, cotovelos, pernas, joelhos), cabelo cacheado / curto grisalho / capacete, bigode, óculos escuros, macacão verde (Cauã) e jaqueta preta (Renato). Poses: `poseStand` (idle, `wave`, `cross`, `cheer`, `sad`, `clap`) e `poseRide` (pilotando, com inclinação, `cheer`, `spin`, `dizzy`). Motos: `buildTrident` (Trident 660), `buildS1000` (S1000RR), `buildGenericBike`; `spinWheels`, `blobShadow` |
-| `src/config.js` | `DRIVERS` (Cauã, Prof. Renato e os NPCs Calouro Lucas e Veterana Bia) com atributos, frase e pose; `physicsFor(stats)`; `ITEMS` (os 7 poderes); `rollItem(pos, total)` com chance por posição; `MESSAGES` humorísticas de vitória, derrota e meio de tabela |
-| `src/input.js` | Classe `Input`: teclado (WASD/setas, Espaço, Shift, Esc), eventos de borda (`consume`) e botões de toque |
-
-## 🚧 Em andamento
-
-Nada ficou pela metade dentro de arquivos. Todos os arquivos acima estão completos e salvos. O próximo passo era escrever os módulos que faltam.
-
-## ⏳ Falta fazer (em ordem sugerida)
-
-1. **`src/audio.js`**: WebAudio sintetizado: som do motor (frequência pela velocidade), músicas chiptune originais (menu/corrida/resultado), efeitos (contagem, item, turbo, batida, coxinha, chegada). Respeitar opções de música e efeitos.
-2. **`src/effects.js`**: partículas (poeira na grama, faíscas de drift azul/laranja, rastro verde do Turbo IFSP, vapor do café, confete).
-3. **`src/racer.js`**: classe `Racer` (moto + piloto em `poseRide`, sombra):
-   - física arcade: aceleração, freio, `maxSpeed` reduzido na grama, derrapagem com mini-turbo, inclinação, pulo nas rampas, placas de turbo;
-   - colisões: muro invisível (`WALL_DIST`), `campus.colliders`, cones (derrubar), entre pilotos;
-   - voltas e checkpoints (`track.K = 8`), progresso para ranking, tempos por volta;
-   - estados: boost, lentidão, giro, escudo;
-   - **IA**: segue a pista com antecipação e offset lateral, freia pela `curvAhead`, rubber-band pela dificuldade e usa itens.
-4. **`src/items.js`**: caixas "?" giratórias nas `track.features.itemRows` (reaparecem após ~3 s), roleta de item, e os efeitos:
-   - Café: boost por ~3 s
-   - Coxinha: projétil que segue a pista até o rival da frente
-   - Prova surpresa: lentidão no líder, com folha "0,0" e tontura
-   - Turbo IFSP: boost forte com rastro
-   - Chuva de boletos: obstáculos atrás
-   - Trabalho em grupo: parede à frente do rival
-   - Recuperação de nota: escudo
-5. **`src/hud.js`**: atualizar o HUD do `index.html` e desenhar o minimapa no `<canvas id="minimap">`.
-6. **`src/main.js`**: renderer (resolução retrô 240p/360p com `image-rendering: pixelated`), máquina de estados (título → modo → piloto → mapa → corrida → resultado), câmera de perseguição suave, cena de seleção (personagens EM PÉ ao lado das motos, girando, com `wave`/`cross`), prévia 3D do mapa, contagem 3-2-1-VAI, pausa, modos (**Corrida rápida**: 4 pilotos; **Campeonato**: 3 corridas manhã/tarde/noite, pontos 10/6/3/1; **Contra o professor**: Cauã x Renato), pódio 3D e tabela de resultado com mensagens. Esconder `#loading` ao terminar de carregar.
-7. **Testar no navegador** (`npm run dev`): pista fechada, IA completando as 3 voltas, itens, colisões, vitória e derrota, mobile.
-8. **Refinar e conferir visualmente**: telhado em prisma do prédio principal e sheds dos laboratórios (rotações ainda não conferidas na tela), poses de braços cruzados e aceno, escala piloto/moto, distâncias dos prédios até a pista.
-
-## Detalhes técnicos importantes
-
-- Convenção de direção: modelos olham para **+Z**; `heading` h → frente `(sin h, 0, cos h)`; direita = `(-cos h, 0, sin h)`; virar à esquerda **aumenta** h. `lateral` positivo = direita.
-- Na pista, o índice 0 é a linha de largada (no estacionamento, sentido leste). O grid de largada deve ficar atrás dela (índices perto de `N`). A volta conta ao cruzar `N → 0` com todos os checkpoints passados.
-- Python não está instalado nesta máquina: use Node para scripts auxiliares.
-- O `npm install` avisou que o postinstall do esbuild não rodou, mas o esbuild foi testado e funciona.
-
-## Como retomar
+## Como rodar
 
 ```bash
 cd D:\if-racer
 npm install      # só se node_modules tiver sido apagado
-npm run dev      # só vai funcionar depois que src/main.js existir
+npm run dev      # abre em http://localhost:5173 (ou a próxima porta livre)
+npm run build    # versão de produção em dist/
 ```
 
-Para continuar com o Claude, abra o projeto e peça algo como:
+Controles: W/↑ acelerar • S/↓ frear/ré • A D/← → virar • Espaço derrapar (mini-turbo ao soltar) • Shift (ou E) usar item • Esc/P pausar. Em telas de toque aparecem botões na tela.
 
-> "Leia o PROGRESS.md e continue o desenvolvimento do IFSP Moto Kart 64 a partir do item 1 da lista 'Falta fazer'."
+## ✅ Implementado
+
+| Arquivo | Conteúdo |
+|---|---|
+| `index.html`, `src/style.css` | Todas as telas em DOM (título, modos, seleção, mapa com manhã/tarde/noite, opções, HUD, pausa, resultado, botões de toque) com visual de menu N64 |
+| `src/main.js` | Classe `Game`: renderer em baixa resolução (retrô 240p/360p/nativo), máquina de estados, modo demonstração com IA no fundo dos menus, palco de seleção no estacionamento em frente ao prédio "INSTITUTO FEDERAL" (personagens **em pé** ao lado das motos, girando, Cauã acenando e Renato com braços cruzados), prévia aérea do mapa, contagem 3-2-1-VAI com largada perfeita e motor afogado, câmera de perseguição suave com FOV dinâmico, colisões (pilotos, objetos, cones), classificação, pausa, resultado com tabela, tempos e melhor volta, mensagens humorísticas, pódio 3D com confete. Modos: **Corrida rápida** (4 pilotos), **Campeonato** (3 corridas manhã/tarde/noite, pontos 10/6/3/1, campeão no final), **Contra o professor** (Cauã x Renato). Opções salvas no `localStorage` |
+| `src/racer.js` | Física arcade (aceleração, freio/ré, grama mais lenta, derrapagem com pulinho e mini-turbo azul/laranja, inclinação, pulo nas rampas com turbo ao pousar, placas de turbo, muro invisível), voltas com 8 checkpoints, contramão, estados (giro, lentidão, escudo, invulnerabilidade), piloto animado em cima da moto, nome flutuante dos rivais. **IA** com antecipação de curva, troca de faixa, desvio de obstáculos, rubber-band por dificuldade, uso inteligente de itens e ré quando fica presa |
+| `src/items.js` | Caixas "?" (5 fileiras × 5) que reaparecem, roleta, e os 7 poderes funcionando: Café (boost + vapor), Coxinha (projétil que persegue o rival da frente pela pista), Prova surpresa (folha "0,0" cai do céu no líder, que fica lento e tonto), Turbo IFSP (boost forte com rastro verde/branco/vermelho), Chuva de boletos (6 boletos caem atrás), Trabalho em grupo (parede de tijolos à frente do rival), Recuperação de nota (escudo que bloqueia um ataque) |
+| `src/hud.js` | Volta, tempo, posição, velocidade em km/h com barra, slot de item com roleta, avisos (contramão, mini-turbo, item), mensagens grandes e minimapa com os pilotos |
+| `src/audio.js` | WebAudio sintetizado: motor que varia com a velocidade, músicas chiptune originais (menu, corrida, vitória, derrota) e ~25 efeitos |
+| `src/effects.js` | Partículas cúbicas instanciadas (poeira, faíscas, fumaça, confete, rastro) |
+| `src/campus.js` | Campus IFSP Birigui estilizado: prédio principal com letreiro, blocos A–D, biblioteca, laboratórios, caixa d'água, usina solar, estacionamento com carros, pórtico "IFSP • CAMPUS BIRIGUI", totem IF, bandeiras, placas humorísticas, postes (acesos à noite), rampas, placas de turbo, cones derrubáveis, pneus, ~420 árvores (com ipês), canaviais, morros e 3 variações de horário |
+| `src/track.js`, `src/models.js`, `src/config.js`, `src/textures.js`, `src/input.js` | Pista em spline e consultas, personagens cabeçudos e motos (Trident 660, S1000RR, genéricas), dados de pilotos, itens e mensagens, texturas procedurais, entrada |
+| `.claude/launch.json` | Configuração para abrir o servidor de desenvolvimento pelo app |
+
+## Testes feitos (06/11)
+
+- Corrida simulada de 3 voltas com 4 pilotos: todos completaram, chegada apertada (~93–94 s), 33 itens usados e 11 acertos.
+- Modo duelo e campeonato completo (3 corridas → tela de campeão) com os botões corretos em cada etapa.
+- Telas conferidas visualmente: título, seleção, corrida de dia e de noite, uso de itens, resultado/pódio e layout de celular com botões de toque.
+- `npm run build` sem erros e nenhum erro no console.
+
+## ⏳ Melhorias possíveis (ainda não feitas)
+
+1. Jogar com teclado de verdade por várias corridas e ajustar o equilíbrio (dificuldade da IA, força dos itens, frequência das caixas).
+2. Conferir de perto, na tela, o telhado em prisma do prédio principal e os sheds dos laboratórios.
+3. Personagens mais fiéis às fotos de referência (as fotos não foram enviadas na conversa; o visual se baseou no concept art).
+4. Mais detalhes na tela de seleção (atributos animados, troca com animação) e no pódio (motos ao lado dos personagens).
+5. Faróis acesos nas motos na corrida noturna.
+6. Separar o código em chunks para reduzir o aviso de bundle > 500 kB (não afeta o funcionamento).
+
+## Detalhes técnicos
+
+- Modelos olham para **+Z**; virar à esquerda aumenta `heading`; `lateral` positivo = direita da pista.
+- O índice 0 da pista é a linha de chegada; o grid fica atrás dela. A volta conta ao cruzar `N → 0` com todos os checkpoints passados.
+- Para testes: `game.autopilot = true` no console faz a IA pilotar a moto do jogador.
+- Python não está instalado nesta máquina: use Node para scripts auxiliares.
+
+## Como retomar
+
+Abra o projeto e peça, por exemplo: *"Leia o PROGRESS.md e continue com as melhorias possíveis do IFSP Moto Kart 64."*
