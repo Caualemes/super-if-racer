@@ -131,6 +131,20 @@ class Game {
     }
     this.podiumChars = [];
     g.visible = false;
+
+    // Luzes dramáticas do pódio (desligadas por padrão, acesas na tela de resultado)
+    // Luz dourada principal (frente-esquerda, apontando para o 1º lugar)
+    this.podiumKeyLight = new THREE.PointLight(0xffd080, 0, 16);
+    this.podiumKeyLight.position.set(STAGE.x - 1, STAGE.y + 8, STAGE.z + 4);
+    this.scene.add(this.podiumKeyLight);
+    // Rim light azul-branca (vem de trás)
+    this.podiumRimLight = new THREE.PointLight(0x80b8ff, 0, 14);
+    this.podiumRimLight.position.set(STAGE.x + 2, STAGE.y + 5, STAGE.z - 5);
+    this.scene.add(this.podiumRimLight);
+    // Fill quente lateral (laranja/vermelho suave)
+    this.podiumFillLight = new THREE.PointLight(0xff9050, 0, 12);
+    this.podiumFillLight.position.set(STAGE.x + 5, STAGE.y + 3, STAGE.z + 2);
+    this.scene.add(this.podiumFillLight);
   }
 
   // ---------------- UI ----------------
@@ -168,6 +182,12 @@ class Game {
     this.stage.visible = name === 'select';
     this.podium.visible = name === 'results';
     for (const c of this.podiumChars) c.visible = name === 'results';
+    // Luzes dramáticas: acendem no pódio, apagam fora dele
+    if (this.podiumKeyLight) {
+      this.podiumKeyLight.intensity = name === 'results' ? 3.5 : 0;
+      this.podiumRimLight.intensity = name === 'results' ? 2.0 : 0;
+      this.podiumFillLight.intensity = name === 'results' ? 1.5 : 0;
+    }
     if (['title', 'mode', 'options'].includes(name)) audio.play('menu');
     if (name === 'select') this.updateSelUI();
     if (name === 'map') {
@@ -573,10 +593,18 @@ class Game {
           ch.rotation.y = ch.userData.style === 'sad' ? -0.4 : Math.sin(this.t * 0.5 + (ch.userData.place || 0)) * 0.15;
         }
         if (Math.random() < 0.08) this.fx.confetti(STAGE.x + (Math.random() - 0.5) * 8, 7, STAGE.z + (Math.random() - 0.5) * 3, 6);
-        const a = Math.sin(this.t * 0.3) * 0.25;
-        this.camera.position.set(STAGE.x + Math.sin(a) * 11, 4.2, STAGE.z + Math.cos(a) * 11);
-        this.camera.fov = 55; this.camera.updateProjectionMatrix();
-        this.camera.lookAt(STAGE.x, 1.0, STAGE.z);
+        // Luzes pulsantes (respiração dramática)
+        if (this.podiumKeyLight) {
+          this.podiumKeyLight.intensity = 3.2 + Math.sin(this.t * 2.4) * 0.5;
+          this.podiumRimLight.intensity = 1.8 + Math.sin(this.t * 1.7 + 1.2) * 0.4;
+          this.podiumFillLight.intensity = 1.2 + Math.sin(this.t * 3.1 + 2.4) * 0.3;
+        }
+        // Câmera de pódio: mais baixa e próxima para enquadramento heróico
+        const a = this.t * 0.3;
+        const camR = 9.5, camH = 3.2;
+        this.camera.position.set(STAGE.x + Math.sin(a) * camR, camH, STAGE.z + Math.cos(a) * camR);
+        this.camera.fov = 48; this.camera.updateProjectionMatrix();
+        this.camera.lookAt(STAGE.x, 1.8, STAGE.z);
         if (inp.consume('Enter')) { const b = $('res-buttons').querySelector('button'); if (b) b.click(); }
         break;
       }

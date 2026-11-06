@@ -2,12 +2,15 @@
 // defletores vermelhos do radiador, rodas pretas e escape curto metálico.
 // A moto olha para +Z. Roda dianteira em z=+0.72, traseira em z=-0.70, raio 0.33.
 import * as THREE from 'three';
-import { M, mesh, G, profile, rod, tube, wheel } from './common.js';
+import { M, Tx, mesh, G, profile, rod, tube, wheel } from './common.js';
 
 export function buildTrident() {
   const b = new THREE.Group();
-  const black = M(0x18181a), satin = M(0x2b2c30), gray = M(0x9ea4ab), grayD = M(0x6b7178);
-  const silver = M(0xc9ced4), chrome = M(0xe2e6ea), red = M(0xd71f28), steel = M(0xb0b5bb);
+  // Texturas pixel-art para as superfícies maiores da moto
+  const black = M(0x18181a), satin = M(0x2b2c30);
+  const gray = Tx(0x9ea4ab, 0.04);        // tanque cinza texturizado
+  const grayD = Tx(0x6b7178, 0.035);
+  const silver = M(0xc9ced4), chrome = M(0xe2e6ea), red = Tx(0xd71f28, 0.03), steel = M(0xb0b5bb);
 
   // rodas
   const fw = wheel({ r: 0.33, w: 0.16, rim: 0x141414, spokes: 6, discs: 2, caliper: 0x2a2a2a });

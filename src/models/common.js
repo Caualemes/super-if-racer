@@ -9,6 +9,46 @@ export function M(color, extra = {}) {
   return matCache.get(key);
 }
 
+// --- Texturas pixel-art procedurais (NearestFilter = look N64 crocante) ---
+const texCache = new Map();
+const c255 = (v) => Math.max(0, Math.min(255, v | 0));
+
+function makeTex(color, size, noiseAmt, pattern) {
+  const key = `${color}_${size}_${noiseAmt}_${pattern}`;
+  if (texCache.has(key)) return texCache.get(key);
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const r0 = (color >> 16) & 0xff, g0 = (color >> 8) & 0xff, b0 = color & 0xff;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const n = (Math.random() - 0.5) * noiseAmt * 255;
+      // 'stripe': linhas horizontais sutis de tecido
+      const s = pattern === 'stripe' && (y % 4 < 1) ? -18 : 0;
+      // 'skin': manchas leves para textura de pele
+      const sk = pattern === 'skin' ? (Math.random() < 0.04 ? -20 : 0) : 0;
+      ctx.fillStyle = `rgb(${c255(r0+n+s+sk)},${c255(g0+n+s+sk)},${c255(b0+n+s+sk)})`;
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.magFilter = THREE.NearestFilter;
+  tex.minFilter = THREE.NearestFilter;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  texCache.set(key, tex);
+  return tex;
+}
+
+// Material com textura pixel-art (flatShading para facetas N64)
+// pattern: null | 'stripe' | 'skin'
+export function Tx(color, noiseAmt = 0.07, extra = {}, pattern = null) {
+  const key = `tx_${color}_${noiseAmt}_${JSON.stringify(extra)}_${pattern}`;
+  if (!matCache.has(key)) {
+    const map = makeTex(color, 32, noiseAmt, pattern);
+    matCache.set(key, new THREE.MeshLambertMaterial({ map, flatShading: true, ...extra }));
+  }
+  return matCache.get(key);
+}
+
 export function mesh(geo, mat, x = 0, y = 0, z = 0, parent) {
   const m = new THREE.Mesh(geo, mat);
   m.position.set(x, y, z);

@@ -2,11 +2,16 @@
 // faróis agressivos em fenda, bolha fumê, rabeta alta, escape metálico lateral.
 // A moto olha para +Z. Roda dianteira em z=+0.76, traseira em z=-0.72, raio 0.33.
 import * as THREE from 'three';
-import { M, mesh, G, profile, rod, tube, wheel } from './common.js';
+import { M, Tx, mesh, G, profile, rod, tube, wheel } from './common.js';
 
 export function buildS1000() {
   const b = new THREE.Group();
-  const black = M(0x141416), gray = M(0x646a72), grayL = M(0xa9aeb5), red = M(0xd0182a), white = M(0xf2f2f2);
+  // Texturas pixel-art nas grandes superfícies da carenagem
+  const black = M(0x141416);
+  const gray = Tx(0x646a72, 0.04);        // carenagem cinza texturizada
+  const grayL = Tx(0xa9aeb5, 0.035);
+  const red = Tx(0xd0182a, 0.03);         // grafismos vermelhos
+  const white = M(0xf2f2f2);
   const steel = M(0xbfc4ca), smoke = M(0x3a4e66, { transparent: true, opacity: 0.85 });
 
   // rodas esportivas pretas com friso vermelho

@@ -1,16 +1,19 @@
 // Personagens 3D low-poly no estilo boneco N64 (cabeça grande, corpo estilizado)
 // O personagem olha para +Z; o lado esquerdo dele é +X. Origem nos pés.
 import * as THREE from 'three';
-import { M, mesh, G, flatShape, mulberry } from './common.js';
+import { M, Tx, mesh, G, flatShape, mulberry } from './common.js';
 
-const FY = 0.3; // centro do rosto dentro do grupo da cabeça
+const FY = 0.32; // centro do rosto dentro do grupo da cabeça (ligeiramente acima para a cabeça maior)
 
 export function buildCharacter(def) {
   const root = new THREE.Group();
   const J = {};
-  const skin = M(def.skin), skinD = M(def.skinShade ?? shade(def.skin, 0.82));
-  const top = M(def.suit), topD = M(def.suit2 ?? shade(def.suit, 0.8));
-  const pants = M(def.pants ?? def.suit);
+  // Texturas pixel-art com NearestFilter para o look N64 crocante
+  const skin = Tx(def.skin, 0.05, {}, 'skin');
+  const skinD = Tx(def.skinShade ?? shade(def.skin, 0.82), 0.04, {}, 'skin');
+  const top = Tx(def.suit, 0.04, {}, 'stripe');
+  const topD = Tx(def.suit2 ?? shade(def.suit, 0.8), 0.04, {}, 'stripe');
+  const pants = Tx(def.pants ?? def.suit, 0.04, {}, 'stripe');
   const boots = M(def.boots ?? 0x1a1a1a);
 
   // ---------------- quadril e pernas ----------------
@@ -60,40 +63,49 @@ export function buildCharacter(def) {
     J[s < 0 ? 'handR' : 'handL'] = hand; J[s < 0 ? 'thumbR' : 'thumbL'] = thumb;
   }
 
-  // ---------------- cabeça ----------------
-  mesh(G.cyl(0.075, 0.085, 0.12, 7), skin, 0, 0.6, 0, torso); // pescoço
-  const head = new THREE.Group(); head.position.y = 0.6; torso.add(head); J.head = head;
-  const face = mesh(G.sphere(0.34, 12, 9), skin, 0, FY, 0, head);
+  // ---------------- cabeça chibi (proporção N64: cabeça grande ~40% maior) ----------------
+  const HR = 0.40; // raio da cabeça (era 0.34, agora maior para look chibi)
+  mesh(G.cyl(0.082, 0.095, 0.14, 7), skin, 0, 0.6, 0, torso); // pescoço mais espesso
+  const head = new THREE.Group(); head.position.y = 0.64; torso.add(head); J.head = head;
+  const face = mesh(G.sphere(HR, 14, 10), skin, 0, FY, 0, head);
   face.scale.set(...(def.faceScale ?? [1, 1.02, 0.98]));
-  if (def.chin) { const c = mesh(G.box(0.17, 0.07, 0.1), skin, 0, FY - 0.27, 0.13, head); c.rotation.x = 0.25; }
-  // orelhas
-  for (const s of [-1, 1]) { const e = mesh(G.sphere(0.075, 6, 5), skin, s * 0.335, FY - 0.03, 0.02, head); e.scale.set(0.45, 1, 0.75); }
+  if (def.chin) { const c = mesh(G.box(0.19, 0.08, 0.11), skin, 0, FY - 0.31, 0.15, head); c.rotation.x = 0.25; }
+  // orelhas maiores para preencher a cabeça maior
+  for (const s of [-1, 1]) { const e = mesh(G.sphere(0.088, 6, 5), skin, s * 0.395, FY - 0.03, 0.02, head); e.scale.set(0.45, 1, 0.75); }
   // nariz
-  const nose = mesh(G.sphere(def.noseSize ?? 0.068, 7, 5), skinD, 0, FY - 0.05, 0.335, head);
+  const nose = mesh(G.sphere((def.noseSize ?? 0.068) * 1.15, 7, 5), skinD, 0, FY - 0.055, 0.395, head);
   nose.scale.set(0.95, 0.9, 1.25);
-  // sobrancelhas
+  // sobrancelhas mais grossas e expressivas
   const browM = M(def.browColor ?? def.hairColor ?? 0x222222);
   for (const s of [-1, 1]) {
-    const b = mesh(G.box(0.13, def.thickBrows ? 0.05 : 0.035, 0.04), browM, s * 0.125, FY + 0.135, 0.305, head);
-    b.rotation.z = s * (def.serious ? 0.16 : -0.08); b.rotation.y = s * 0.3;
+    const bw = def.thickBrows ? 0.062 : 0.042;
+    const b = mesh(G.box(0.155, bw, 0.048), browM, s * 0.148, FY + 0.16, 0.358, head);
+    b.rotation.z = s * (def.serious ? 0.18 : -0.09); b.rotation.y = s * 0.28;
+  }
+  // olhos (esclerótica branca + pupila escura) para chars sem óculos — dá expressão mesmo de longe
+  if (!def.glasses) {
+    for (const s of [-1, 1]) {
+      mesh(G.sphere(0.085, 7, 5), M(0xf0f0f0), s * 0.148, FY + 0.055, 0.375, head).scale.set(0.7, 0.75, 0.6);
+      mesh(G.sphere(0.065, 6, 4), M(0x1a1010), s * 0.148, FY + 0.045, 0.395, head).scale.set(0.6, 0.7, 0.55);
+    }
   }
   // boca
   const mouthM = M(0x5a1e1e);
-  const mouth = new THREE.Group(); mouth.position.set(0, FY - 0.2, 0.275); head.add(mouth); J.mouth = mouth;
+  const mouth = new THREE.Group(); mouth.position.set(0, FY - 0.23, 0.325); head.add(mouth); J.mouth = mouth;
   if (def.smile) {
-    mesh(G.box(0.1, 0.03, 0.03), mouthM, 0, 0, 0, mouth);
-    for (const s of [-1, 1]) { const c = mesh(G.box(0.045, 0.026, 0.03), mouthM, s * 0.065, 0.015, -0.01, mouth); c.rotation.z = s * 0.5; }
+    mesh(G.box(0.115, 0.034, 0.034), mouthM, 0, 0, 0, mouth);
+    for (const s of [-1, 1]) { const c = mesh(G.box(0.05, 0.03, 0.034), mouthM, s * 0.075, 0.018, -0.012, mouth); c.rotation.z = s * 0.5; }
   } else {
     // boca séria: linha fina e escura
-    mesh(G.box(0.12, 0.016, 0.02), M(0x3a2420), 0, 0, 0.005, mouth);
+    mesh(G.box(0.138, 0.018, 0.022), M(0x3a2420), 0, 0, 0.006, mouth);
   }
   // marcas de expressão (rosto mais velho): sulcos finos e escuros, rentes ao rosto
   if (def.wrinkles) {
     const wm = M(shade(def.skin, 0.68));
     for (const s of [-1, 1]) {
-      const w = mesh(G.box(0.01, 0.085, 0.01), wm, s * 0.1, FY - 0.15, 0.288, head); w.rotation.z = s * 0.4; w.rotation.y = s * 0.32;
+      const w = mesh(G.box(0.012, 0.1, 0.012), wm, s * 0.12, FY - 0.17, 0.338, head); w.rotation.z = s * 0.4; w.rotation.y = s * 0.32;
     }
-    mesh(G.box(0.14, 0.008, 0.01), wm, 0, FY + 0.2, 0.282, head); // ruga na testa
+    mesh(G.box(0.165, 0.009, 0.012), wm, 0, FY + 0.23, 0.332, head); // ruga na testa
   }
   if (def.mustache) mustache(head, M(def.hairColor ?? 0x141012));
   if (def.glasses === 'aviator') aviators(head);
@@ -151,90 +163,91 @@ function bikerJacket(torso, top, topD) {
 
 // ---------- rosto ----------
 function mustache(head, mat) {
-  const g = new THREE.Group(); g.position.set(0, FY - 0.125, 0.315); head.add(g);
-  mesh(G.box(0.22, 0.07, 0.07), mat, 0, 0, 0, g);
+  // bigode proporcionalmente maior para a cabeça HR=0.40
+  const g = new THREE.Group(); g.position.set(0, FY - 0.145, 0.372); head.add(g);
+  mesh(G.box(0.26, 0.082, 0.078), mat, 0, 0, 0, g);
   for (const s of [-1, 1]) {
-    const t = mesh(G.box(0.08, 0.075, 0.06), mat, s * 0.115, -0.02, -0.015, g); t.rotation.z = s * 0.55; t.rotation.y = s * 0.4;
+    const t = mesh(G.box(0.09, 0.085, 0.065), mat, s * 0.135, -0.022, -0.016, g); t.rotation.z = s * 0.52; t.rotation.y = s * 0.38;
   }
 }
 
 const LENS = () => M(0x0e1218, { emissive: 0x0a1424 });
 function aviators(head) {
-  // óculos aviador: lentes em gota, armação dourada fina
-  const frame = M(0xd4ac4c), lens = LENS(), shine = M(0xffffff, { emissive: 0x888888 });
+  // óculos aviador: lentes em gota maiores, armação dourada — proporção para HR=0.40
+  const frame = M(0xd4ac4c), lens = LENS(), shine = M(0xffffff, { emissive: 0xaaaaaa });
   for (const s of [-1, 1]) {
-    const g = new THREE.Group(); g.position.set(s * 0.125, FY + 0.045, 0.312); g.rotation.y = s * 0.28; head.add(g);
-    const pts = [[-0.085, 0.045], [0.085, 0.045], [0.1, 0.0], [0.07, -0.075], [0.0, -0.095], [-0.065, -0.07], [-0.09, -0.01]].map(([x, y]) => [x * s, y]);
-    const l = flatShape(pts, 0.018, lens, g); l.position.z = 0.012;
-    const f = flatShape(pts.map(([x, y]) => [x * 1.13, y * 1.13 + 0.004]), 0.016, frame, g); f.position.z = 0.002;
-    const sh = mesh(G.box(0.045, 0.012, 0.005), shine, -s * 0.035, 0.015, 0.032, g); sh.rotation.z = s * 0.5;
-    // haste até a orelha
-    const t = mesh(G.box(0.012, 0.012, 0.3), frame, s * 0.1, 0.03, -0.14, g); t.rotation.y = s * 0.12;
+    const g = new THREE.Group(); g.position.set(s * 0.148, FY + 0.052, 0.368); g.rotation.y = s * 0.28; head.add(g);
+    const pts = [[-0.1, 0.052], [0.1, 0.052], [0.118, 0.0], [0.084, -0.088], [0.0, -0.112], [-0.078, -0.082], [-0.108, -0.012]].map(([x, y]) => [x * s, y]);
+    const l = flatShape(pts, 0.022, lens, g); l.position.z = 0.014;
+    const f = flatShape(pts.map(([x, y]) => [x * 1.12, y * 1.12 + 0.005]), 0.019, frame, g); f.position.z = 0.002;
+    const sh = mesh(G.box(0.052, 0.014, 0.006), shine, -s * 0.04, 0.018, 0.038, g); sh.rotation.z = s * 0.5;
+    // haste até a orelha (mais longa para cabeça maior)
+    const t = mesh(G.box(0.014, 0.014, 0.35), frame, s * 0.12, 0.034, -0.165, g); t.rotation.y = s * 0.12;
   }
-  mesh(G.box(0.07, 0.012, 0.015), frame, 0, FY + 0.09, 0.335, head);
-  mesh(G.box(0.05, 0.01, 0.015), frame, 0, FY + 0.065, 0.335, head);
+  mesh(G.box(0.082, 0.014, 0.018), frame, 0, FY + 0.1, 0.395, head);
+  mesh(G.box(0.06, 0.012, 0.018), frame, 0, FY + 0.074, 0.395, head);
 }
 
 function wrapGlasses(head) {
-  // óculos retangulares envolventes, armação preta grossa
-  const frame = M(0x141416), lens = LENS(), shine = M(0xffffff, { emissive: 0x888888 });
+  // óculos retangulares envolventes, armação preta grossa — escala para HR=0.40
+  const frame = M(0x141416), lens = LENS(), shine = M(0xffffff, { emissive: 0xaaaaaa });
   for (const s of [-1, 1]) {
-    const g = new THREE.Group(); g.position.set(s * 0.125, FY + 0.04, 0.31); g.rotation.y = s * 0.3; head.add(g);
-    mesh(G.box(0.19, 0.11, 0.025), frame, 0, 0, 0, g);
-    mesh(G.box(0.165, 0.085, 0.02), lens, 0, -0.003, 0.012, g);
-    const sh = mesh(G.box(0.05, 0.01, 0.005), shine, -s * 0.04, 0.02, 0.024, g); sh.rotation.z = s * 0.4;
-    mesh(G.box(0.025, 0.035, 0.32), frame, s * 0.095, 0.03, -0.15, g).rotation.y = s * 0.1;
+    const g = new THREE.Group(); g.position.set(s * 0.148, FY + 0.045, 0.365); g.rotation.y = s * 0.3; head.add(g);
+    mesh(G.box(0.224, 0.13, 0.03), frame, 0, 0, 0, g);
+    mesh(G.box(0.195, 0.1, 0.024), lens, 0, -0.004, 0.014, g);
+    const sh = mesh(G.box(0.06, 0.012, 0.006), shine, -s * 0.048, 0.024, 0.028, g); sh.rotation.z = s * 0.4;
+    mesh(G.box(0.028, 0.04, 0.38), frame, s * 0.112, 0.034, -0.175, g).rotation.y = s * 0.1;
   }
-  mesh(G.box(0.07, 0.03, 0.025), frame, 0, FY + 0.065, 0.335, head);
+  mesh(G.box(0.082, 0.035, 0.03), frame, 0, FY + 0.074, 0.395, head);
 }
 
 // ---------- cabelos ----------
 function hairPompadour(head, mat, hi) {
-  // cabelo preto, volumoso e ondulado, jogado para trás (Cauã)
-  const main = mesh(G.sphere(0.37, 10, 7), mat, 0, FY + 0.17, -0.08, head); main.scale.set(1.08, 0.66, 1.03);
-  const back = mesh(G.sphere(0.35, 10, 7), mat, 0, FY + 0.0, -0.1, head); back.scale.set(0.99, 0.95, 0.88);
+  // cabelo preto, volumoso e ondulado — escala para HR=0.40
+  const main = mesh(G.sphere(0.44, 10, 7), mat, 0, FY + 0.2, -0.09, head); main.scale.set(1.08, 0.66, 1.03);
+  const back = mesh(G.sphere(0.42, 10, 7), mat, 0, FY + 0.02, -0.11, head); back.scale.set(0.99, 0.95, 0.88);
   // volume lateral acima das orelhas
   for (const s of [-1, 1]) {
-    const side = mesh(G.sphere(0.17, 7, 5), mat, s * 0.3, FY + 0.12, -0.04, head); side.scale.set(0.75, 1, 1.25);
-    mesh(G.box(0.05, 0.13, 0.08), mat, s * 0.325, FY - 0.0, 0.1, head); // costeletas
+    const side = mesh(G.sphere(0.2, 7, 5), mat, s * 0.355, FY + 0.14, -0.05, head); side.scale.set(0.75, 1, 1.25);
+    mesh(G.box(0.06, 0.155, 0.095), mat, s * 0.385, FY - 0.0, 0.12, head); // costeletas
   }
   // topete ondulado na frente
   const r = mulberry(11);
-  const front = [[-0.2, 0.24, 0.19, 0.11], [-0.1, 0.3, 0.22, 0.13], [0.02, 0.33, 0.23, 0.14], [0.13, 0.31, 0.21, 0.13], [0.22, 0.25, 0.18, 0.11]];
+  const front = [[-0.24, 0.29, 0.22, 0.13], [-0.12, 0.36, 0.26, 0.155], [0.02, 0.4, 0.27, 0.165], [0.15, 0.37, 0.25, 0.155], [0.26, 0.3, 0.22, 0.13]];
   for (const [x, y, z, rr] of front) { const w = mesh(G.sphere(rr, 7, 5), mat, x, FY + y, z, head); w.scale.set(1.1, 0.85, 1); }
   // ondas/cachos no topo para quebrar a silhueta
-  for (let i = 0; i < 16; i++) {
-    const a = r() * Math.PI * 2, d = 0.08 + r() * 0.24;
+  for (let i = 0; i < 18; i++) {
+    const a = r() * Math.PI * 2, d = 0.09 + r() * 0.28;
     const x = Math.cos(a) * d * 1.05, z = Math.sin(a) * d - 0.05;
-    const y = FY + 0.36 - d * d * 1.2;
-    const c = mesh(G.sphere(0.07 + r() * 0.04, 6, 4), i % 5 === 0 ? hi : mat, x, y, z, head);
+    const y = FY + 0.43 - d * d * 1.2;
+    const c = mesh(G.sphere(0.082 + r() * 0.045, 6, 4), i % 5 === 0 ? hi : mat, x, y, z, head);
     c.scale.set(1.2, 0.7, 1);
   }
 }
 
 function hairGrayShort(head, color) {
-  // cabelo curto, grisalho e texturizado (Renato)
+  // cabelo curto, grisalho e texturizado — escala para HR=0.40
   const base = M(color), light = M(shade(color, 1.15)), dark = M(shade(color, 0.75));
-  const cap = mesh(new THREE.SphereGeometry(0.355, 12, 7, 0, Math.PI * 2, 0, Math.PI * 0.5), base, 0, FY + 0.02, -0.02, head);
+  const cap = mesh(new THREE.SphereGeometry(0.42, 12, 7, 0, Math.PI * 2, 0, Math.PI * 0.5), base, 0, FY + 0.02, -0.02, head);
   cap.rotation.x = -0.32;
-  for (const s of [-1, 1]) mesh(G.box(0.05, 0.14, 0.26), dark, s * 0.325, FY + 0.03, -0.06, head);
-  mesh(G.box(0.5, 0.16, 0.12), dark, 0, FY - 0.0, -0.29, head);
+  for (const s of [-1, 1]) mesh(G.box(0.06, 0.165, 0.305), dark, s * 0.385, FY + 0.03, -0.07, head);
+  mesh(G.box(0.6, 0.19, 0.14), dark, 0, FY - 0.0, -0.34, head);
   const r = mulberry(5);
   const mats = [base, light, dark];
-  for (let i = 0; i < 46; i++) {
+  for (let i = 0; i < 52; i++) {
     const th = r() * Math.PI * 2, ph = r() * 1.2;
-    const rad = 0.35;
+    const rad = 0.415;
     const x = Math.sin(ph) * Math.sin(th) * rad, y = Math.cos(ph) * rad, z = Math.sin(ph) * Math.cos(th) * rad;
-    // aplica a mesma inclinação do "cap"
     const c = Math.cos(-0.32), sn = Math.sin(-0.32);
     const y2 = y * c - z * sn, z2 = y * sn + z * c;
-    if (z2 > 0.2 && y2 < 0.16) continue;
-    mesh(G.sphere(0.052 + r() * 0.02, 5, 4), mats[i % 3], x, FY + 0.02 + y2, -0.02 + z2, head);
+    if (z2 > 0.24 && y2 < 0.18) continue;
+    mesh(G.sphere(0.062 + r() * 0.024, 5, 4), mats[i % 3], x, FY + 0.02 + y2, -0.02 + z2, head);
   }
 }
 
 function helmet(head, mat) {
-  const h = mesh(G.sphere(0.43, 10, 7), mat, 0, FY + 0.06, -0.02, head); h.scale.set(1, 0.98, 1.02);
-  const visor = mesh(G.box(0.56, 0.2, 0.1), M(0x223344, { emissive: 0x112233 }), 0, FY + 0.05, 0.38, head); visor.rotation.x = -0.15;
-  mesh(G.box(0.08, 0.1, 0.62), M(0xffffff), 0, FY + 0.46, -0.02, head);
+  // capacete proporcional para HR=0.40
+  const h = mesh(G.sphere(0.51, 10, 7), mat, 0, FY + 0.07, -0.02, head); h.scale.set(1, 0.98, 1.02);
+  const visor = mesh(G.box(0.66, 0.24, 0.12), M(0x223344, { emissive: 0x112233 }), 0, FY + 0.055, 0.45, head); visor.rotation.x = -0.15;
+  mesh(G.box(0.095, 0.12, 0.74), M(0xffffff), 0, FY + 0.54, -0.02, head);
 }
