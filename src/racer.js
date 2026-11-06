@@ -34,8 +34,9 @@ export class Racer {
     this.bike = this.def.bike();
     this.body.add(this.bike);
     this.char = buildCharacter(this.def.look);
-    this.char.scale.setScalar(0.82);
-    this.char.position.set(0, 0.92, -0.26);
+    this.char.scale.setScalar(0.8);
+    const seat = this.bike.userData.seat || { y: 1.05, z: -0.28 };
+    this.char.position.set(0, seat.y + 0.07, seat.z);
     this.body.add(this.char);
     this.shadow = blobShadow(1.6, 3.6);
     this.root.add(this.shadow);
@@ -139,6 +140,7 @@ export class Racer {
       if (this.spin <= 0) this.spinAngle = 0;
     }
     this.gas = gas ? 1 : 0;
+    this.brakeIn = brake && this.speed > 2 ? 1 : 0;
 
     // aceleração
     if (this.boost > 0) {
@@ -281,7 +283,10 @@ export class Racer {
     if (this.cheer > 0 || (this.finished && this.position === 1)) mode = 'cheer';
     else if (this.spin > 0) mode = 'spin';
     else if (this.prova > 0) mode = 'dizzy';
-    poseRide(this.char, this.lean, this.gas, t, mode);
+    this.accelPose = (this.accelPose || 0) + ((this.gas - (this.brakeIn || 0)) - (this.accelPose || 0)) * Math.min(1, 6 * dt);
+    poseRide(this.char, this.lean, this.accelPose, t, mode);
+    // frenagem: a moto "afunda" na frente; aceleração: levanta levemente
+    this.body.rotation.x = this.grounded ? (this.brakeIn ? 0.035 : this.gas && this.speed < 20 ? -0.03 : 0) : 0;
     this.cheer = Math.max(0, this.cheer - dt);
     // escudo / prova
     this.shieldMesh.visible = this.shield > 0 && (this.shield > 1.5 || Math.sin(t * 30) > 0);

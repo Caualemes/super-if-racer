@@ -90,7 +90,7 @@ class Game {
     this.scene.add(g);
     this.stageSlots = PLAYABLE.map((id, i) => {
       const slot = new THREE.Group();
-      slot.position.set(i === 0 ? -3.4 : 3.4, 0, 0);
+      slot.position.set(i === 0 ? -3.0 : 3.0, 0, 0);
       g.add(slot);
       const disc = new THREE.Mesh(new THREE.CylinderGeometry(3, 3.2, 0.35, 16), M(i === 0 ? 0x1fa83a : 0x2a2d36));
       disc.position.y = 0.17; slot.add(disc);
@@ -444,7 +444,7 @@ class Game {
     podiumOrder.forEach((r, i) => {
       const ch = buildCharacter(r.def.look);
       ch.position.copy(this.podiumSpots[i]);
-      ch.userData.style = i === 0 ? 'cheer' : 'clap';
+      ch.userData.style = i === 0 ? 'winner' : 'clap';
       ch.userData.place = i;
       this.podium.add(ch);
       this.podiumChars.push(ch);
@@ -503,17 +503,24 @@ class Game {
         this.simulate(dt, false);
         this.stageSlots.forEach((s, i) => {
           const sel = i === this.selIdx;
-          const targetS = sel ? 1.08 : 0.86;
+          const targetS = sel ? 1.05 : 0.92;
           s.slot.scale.setScalar(s.slot.scale.x + (targetS - s.slot.scale.x) * Math.min(1, 8 * dt));
-          s.turn.rotation.y = sel ? Math.sin(this.t * 0.6) * 0.75 : s.turn.rotation.y * 0.95;
+          s.turn.rotation.y = sel ? Math.sin(this.t * 0.6) * 0.6 : s.turn.rotation.y * 0.95;
           s.ring.visible = sel;
-          poseStand(s.ch, this.t + i * 1.3, DRIVERS[s.id].pose);
+          // alterna entre a pose característica e a pose secundária
+          const d = DRIVERS[s.id];
+          const alt = Math.floor((this.t + i * 3.5) / 7) % 2 === 1;
+          poseStand(s.ch, this.t + i * 1.3, alt && d.altPose ? d.altPose : d.pose);
         });
-        const cx = this.selIdx === 0 ? -1.2 : 1.2;
-        const camT = new THREE.Vector3(STAGE.x + cx, 2.3, STAGE.z + 8.2);
+        // enquadra os dois pilotos e motos inteiros; em retrato, foca o selecionado
+        const portrait = this.camera.aspect < 1;
+        const halfV = Math.max(4.2, (portrait ? 3.0 : 6.4) / this.camera.aspect);
+        const dist = halfV / Math.tan(THREE.MathUtils.degToRad(21));
+        const cx = portrait ? this.stageSlots[this.selIdx].slot.position.x : (this.selIdx === 0 ? -0.35 : 0.35);
+        const camT = new THREE.Vector3(STAGE.x + cx, 0.9 + dist * 0.14, STAGE.z + dist);
         this.camera.position.lerp(camT, Math.min(1, 4 * dt));
-        this.camera.fov = 50; this.camera.updateProjectionMatrix();
-        this.camera.lookAt(STAGE.x + cx * 0.6, 0.75, STAGE.z);
+        this.camera.fov = 42; this.camera.updateProjectionMatrix();
+        this.camera.lookAt(this.camera.position.x, 0.95, STAGE.z);
         break;
       }
       case 'countdown': {
@@ -560,7 +567,9 @@ class Game {
         this.raceTime += dt;
         this.simulate(dt, false);
         for (const ch of this.podiumChars) {
-          poseStand(ch, this.t + (ch.userData.place || 0), ch.userData.style);
+          let style = ch.userData.style;
+          if (style === 'winner') style = Math.floor(this.t / 3) % 2 ? 'cheer' : 'victory';
+          poseStand(ch, this.t + (ch.userData.place || 0), style);
           ch.rotation.y = ch.userData.style === 'sad' ? -0.4 : Math.sin(this.t * 0.5 + (ch.userData.place || 0)) * 0.15;
         }
         if (Math.random() < 0.08) this.fx.confetti(STAGE.x + (Math.random() - 0.5) * 8, 7, STAGE.z + (Math.random() - 0.5) * 3, 6);
@@ -585,6 +594,7 @@ class Game {
 window.addEventListener('DOMContentLoaded', () => {
   try {
     window.game = new Game();
+    if (import.meta.env.DEV) import('./debugViewer.js').then((m) => m.installViewer(window.game));
   } catch (e) {
     console.error(e);
     $('loading').textContent = 'Erro ao iniciar: ' + e.message;

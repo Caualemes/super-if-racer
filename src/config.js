@@ -8,10 +8,11 @@ export const DRIVERS = {
     quote: '"Bora que hoje não tem aula, tem corrida!"',
     pose: 'wave',
     look: {
-      skin: 0xc98d62, nose: 0xbf7f55, hair: 'curly', hairColor: 0x15110e, mustache: true, mustacheColor: 0x15110e,
-      glasses: true, glassesFrame: 0xc9a24a, suit: 0x55623a, suit2: 0x434e2c, boots: 0x3a2a1a, gloves: 0x2b2b20, smile: true,
-      outfit: 'flightsuit',
+      skin: 0xd09a6e, hair: 'pompadour', hairColor: 0x141012, thickBrows: true, mustache: true,
+      glasses: 'aviator', suit: 0x55603a, suit2: 0x434c2c, boots: 0x161616, smile: true,
+      outfit: 'flightsuit', faceScale: [1, 1.0, 0.98], rideStyle: 'naked',
     },
+    altPose: 'hips',
     bike: () => buildTrident(),
   },
   renato: {
@@ -20,9 +21,11 @@ export const DRIVERS = {
     quote: '"Quem chegar depois de mim leva falta."',
     pose: 'cross',
     look: {
-      skin: 0xe0b08a, nose: 0xd49e78, hair: 'short', hairColor: 0xb9bcc0, browColor: 0x8a8d90, glasses: true, glassesFrame: 0x222222,
-      suit: 0x1c1c20, suit2: 0x4a4d52, boots: 0x111111, gloves: 0x111111, serious: true, outfit: 'jacket',
+      skin: 0xe2b48e, hair: 'grayShort', hairColor: 0xb4b7bb, browColor: 0x8e9194, glasses: 'wrap',
+      suit: 0x1a1a1e, suit2: 0x2e2f35, pants: 0x1c2230, boots: 0x111111, serious: true, outfit: 'jacket',
+      faceScale: [0.95, 1.06, 0.95], chin: true, wrinkles: true, noseSize: 0.074, rideStyle: 'sport',
     },
+    altPose: 'thumbs',
     bike: () => buildS1000(),
   },
   calouro: {
