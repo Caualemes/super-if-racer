@@ -53,8 +53,17 @@ export function buildS1000() {
     const eye = mesh(G.box(0.12, 0.035, 0.05), M(0xfff7d8, { emissive: 0xfff0b0 }), s * 0.1, 0.955, 0.925, body);
     eye.rotation.z = s * -0.35; eye.rotation.x = 0.5;
     if (s > 0) b.userData.headlight = eye;
+    // DRL LED strip abaixo do farol
+    const drl = mesh(G.box(0.1, 0.012, 0.03), M(0xfff8e0, { emissive: 0xfff0c0 }), s * 0.1, 0.918, 0.945, body);
+    drl.rotation.z = s * -0.2; drl.rotation.x = 0.48;
   }
   mesh(G.box(0.08, 0.06, 0.05), black, 0, 0.9, 0.95, body).rotation.x = 0.4;
+  // winglets aerodinâmicos — característica marcante do S1000RR (geram downforce)
+  for (const s of [-1, 1]) {
+    profile([[0.70, 0.46], [0.46, 0.44], [0.42, 0.405], [0.66, 0.405]], 0.09, gray, { x: s * 0.258, parent: body, bevel: 0.012 });
+    // borda de ataque em preto
+    profile([[0.70, 0.462], [0.66, 0.462], [0.64, 0.408], [0.68, 0.408]], 0.014, black, { x: s * 0.308, parent: body, bevel: 0 });
+  }
   // bolha fumê alta
   profile([[0.6, 1.14], [0.88, 1.06], [0.64, 1.36], [0.46, 1.3]], 0.32, smoke, { parent: body, bevel: 0.01 });
   // painel TFT
@@ -75,9 +84,10 @@ export function buildS1000() {
 
   // escape metálico lateral (direita), subindo
   tube([[0.1, 0.24, 0.3], [0.12, 0.2, 0.0], [-0.12, 0.26, -0.2]], 0.035, steel, body, 8);
-  const can = mesh(G.cyl(0.075, 0.085, 0.36, 8), steel, -0.2, 0.42, -0.42, body); can.rotation.x = Math.PI / 2 - 0.45;
-  const tip = mesh(G.cyl(0.06, 0.06, 0.05, 8), M(0x1e1e1e), -0.2, 0.5, -0.6, body); tip.rotation.x = Math.PI / 2 - 0.45;
-  mesh(G.box(0.012, 0.05, 0.2), M(0xd0182a), -0.28, 0.44, -0.44, body).rotation.x = -0.45;
+  const can = mesh(G.cyl(0.075, 0.085, 0.38, 10), steel, -0.2, 0.42, -0.42, body); can.rotation.x = Math.PI / 2 - 0.45;
+  mesh(G.cyl(0.088, 0.088, 0.016, 10), M(0xd8dce0), -0.2, 0.505, -0.615, body).rotation.x = Math.PI / 2 - 0.45; // anel cromado
+  const tip = mesh(G.cyl(0.058, 0.058, 0.05, 10), M(0x1a1a1a), -0.2, 0.505, -0.63, body); tip.rotation.x = Math.PI / 2 - 0.45;
+  mesh(G.box(0.012, 0.055, 0.22), M(0xd0182a), -0.28, 0.44, -0.44, body).rotation.x = -0.45;
 
   // garfo invertido dourado + mesas
   for (const s of [-1, 1]) {

@@ -31,7 +31,13 @@ export function buildTrident() {
 
   // motor: bloco + 3 cilindros com aletas + tampas prateadas
   profile([[-0.24, 0.32], [0.3, 0.3], [0.38, 0.5], [0.32, 0.66], [-0.05, 0.62], [-0.26, 0.5]], 0.36, satin, { parent: b, bevel: 0.02 });
-  for (let i = 0; i < 4; i++) mesh(G.box(0.38, 0.02, 0.2), silver, 0, 0.64 + i * 0.045, 0.2 - i * 0.02, b).rotation.x = 0.35;
+  // carter esquerdo (alternador)
+  mesh(G.cyl(0.11, 0.11, 0.04, 10), silver, -0.2, 0.42, 0.0, b).rotation.z = Math.PI / 2;
+  // 6 aletas de refrigeração
+  for (let i = 0; i < 6; i++) {
+    const w = 0.38 - i * 0.012;
+    mesh(G.box(w, 0.014, 0.21), silver, 0, 0.615 + i * 0.034, 0.21 - i * 0.017, b).rotation.x = 0.35;
+  }
   mesh(G.box(0.34, 0.06, 0.18), black, 0, 0.82, 0.13, b).rotation.x = 0.35; // cabeçote
   for (const s of [-1, 1]) {
     const cov = mesh(G.cyl(0.12, 0.12, 0.03, 10), silver, s * 0.19, 0.45, 0.02, b); cov.rotation.z = Math.PI / 2;
@@ -42,11 +48,18 @@ export function buildTrident() {
     tube([[x, 0.66, 0.36], [x * 1.1, 0.5, 0.46], [x * 0.8, 0.24, 0.38], [0.06 + x * 0.3, 0.17, 0.1], [0.1, 0.19, -0.1]], 0.026, steel, b, 10);
   }
   // panela de escape curta, sob o motor (lado direito)
-  const can = mesh(G.cyl(0.085, 0.1, 0.32, 8), steel, -0.13, 0.22, -0.22, b); can.rotation.x = Math.PI / 2 - 0.15;
-  const tip = mesh(G.cyl(0.06, 0.06, 0.04, 8), M(0x2a2a2a), -0.13, 0.24, -0.39, b); tip.rotation.x = Math.PI / 2 - 0.15;
+  const can = mesh(G.cyl(0.082, 0.098, 0.34, 10), steel, -0.13, 0.22, -0.22, b); can.rotation.x = Math.PI / 2 - 0.15;
+  mesh(G.cyl(0.095, 0.095, 0.015, 10), chrome, -0.13, 0.225, -0.405, b).rotation.x = Math.PI / 2 - 0.15; // anel cromado
+  const tip = mesh(G.cyl(0.058, 0.058, 0.04, 10), M(0x1a1a1a), -0.13, 0.225, -0.422, b); tip.rotation.x = Math.PI / 2 - 0.15;
+  // protetor de calor
+  mesh(G.box(0.016, 0.055, 0.28), M(0x242428), -0.085, 0.265, -0.22, b).rotation.x = -0.15;
 
   // radiador + defletores vermelhos característicos
   mesh(G.box(0.36, 0.26, 0.05), black, 0, 0.72, 0.42, b).rotation.x = -0.3;
+  // slats do radiador
+  for (let i = 0; i < 5; i++) {
+    const r = mesh(G.box(0.34, 0.012, 0.015), M(0x888e96), 0, 0.615 + i * 0.045, 0.445, b); r.rotation.x = -0.3;
+  }
   for (const s of [-1, 1]) {
     profile([[0.3, 0.66], [0.5, 0.74], [0.52, 0.92], [0.4, 0.98], [0.3, 0.86]], 0.035, red, { x: s * 0.215, parent: b, bevel: 0.008 });
   }
@@ -66,13 +79,16 @@ export function buildTrident() {
   rod([0, 1.02, -0.82], [0, 0.82, -0.98], 0.02, black, b);
   mesh(G.box(0.16, 0.11, 0.01), M(0xf2f2f2), 0, 0.8, -0.99, b);
 
-  // garfo dianteiro (preto com bainhas douradas) + mesas
+  // garfo dianteiro: slider preto (inferior) + estanque cromado (superior)
   for (const s of [-1, 1]) {
-    rod([s * 0.1, 0.33, 0.72], [s * 0.1, 0.72, 0.6], 0.04, M(0x3a3c40), b);
-    rod([s * 0.1, 0.72, 0.6], [s * 0.1, 1.12, 0.48], 0.034, black, b);
+    rod([s * 0.1, 0.33, 0.72], [s * 0.1, 0.72, 0.60], 0.044, black, b);    // slider
+    rod([s * 0.1, 0.72, 0.60], [s * 0.1, 1.12, 0.48], 0.032, chrome, b);   // estanque cromado
   }
   mesh(G.box(0.28, 0.04, 0.1), satin, 0, 1.1, 0.49, b);
   mesh(G.box(0.28, 0.035, 0.1), satin, 0, 0.98, 0.52, b);
+  // braços de reforço do garfo (fork brace)
+  mesh(G.box(0.235, 0.038, 0.048), satin, 0, 0.56, 0.68, b);
+  mesh(G.box(0.22, 0.03, 0.04), M(0x505558), 0, 0.46, 0.70, b);
   // para-lama dianteiro
   profile([[0.5, 0.62], [0.7, 0.7], [0.92, 0.6], [0.94, 0.56], [0.7, 0.65], [0.52, 0.58]], 0.15, black, { parent: b, bevel: 0.01 });
 
