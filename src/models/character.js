@@ -30,7 +30,7 @@ export function buildCharacter(def) {
     // bota arredondada
     mesh(G.box(0.19, 0.13, 0.27), boots, 0, -0.325, 0.035, knee);
     const toe = mesh(G.sphere(0.1, 7, 5), boots, 0, -0.33, 0.15, knee); toe.scale.set(0.95, 0.65, 1);
-    mesh(G.box(0.2, 0.03, 0.31), M(0x0c0c0c), 0, -0.38, 0.05, knee); // sola
+    mesh(G.box(0.2, 0.03, 0.31), M(def.sole ?? 0x0c0c0c), 0, -0.38, 0.05, knee); // sola
     J[s < 0 ? 'legR' : 'legL'] = leg; J[s < 0 ? 'kneeR' : 'kneeL'] = knee;
   }
 
@@ -108,9 +108,11 @@ export function buildCharacter(def) {
     mesh(G.box(0.165, 0.009, 0.012), wm, 0, FY + 0.23, 0.332, head); // ruga na testa
   }
   if (def.mustache) mustache(head, M(def.hairColor ?? 0x141012));
+  if (def.goatee) goatee(head, M(def.hairColor ?? 0x141012));
   if (def.glasses === 'aviator') aviators(head);
   else if (def.glasses === 'wrap') wrapGlasses(head);
   if (def.hair === 'pompadour') hairPompadour(head, M(def.hairColor ?? 0x141012), M(shade(def.hairColor ?? 0x141012, 1.8)));
+  else if (def.hair === 'wavyLong') hairWavyLong(head, M(def.hairColor ?? 0x141012), M(shade(def.hairColor ?? 0x141012, 1.6)));
   else if (def.hair === 'grayShort') hairGrayShort(head, def.hairColor ?? 0xb9bcc0);
   else if (def.hair === 'helmet') helmet(head, M(def.helmetColor ?? 0x2255dd));
 
@@ -169,6 +171,18 @@ function mustache(head, mat) {
   for (const s of [-1, 1]) {
     const t = mesh(G.box(0.09, 0.085, 0.065), mat, s * 0.135, -0.022, -0.016, g); t.rotation.z = s * 0.52; t.rotation.y = s * 0.38;
   }
+}
+
+function goatee(head, mat) {
+  // cavanhaque: patch oval sob o lábio inferior (fica abaixo da boca, na frente do queixo)
+  const g = new THREE.Group(); g.position.set(0, FY - 0.3, 0.355); head.add(g);
+  mesh(G.sphere(0.085, 7, 5), mat, 0, 0, 0, g).scale.set(1.1, 0.75, 0.68);
+  // pontinhos laterais (barba raspada crescendo)
+  for (const s of [-1, 1]) {
+    mesh(G.sphere(0.038, 5, 4), mat, s * 0.07, 0.02, -0.01, g).scale.set(0.75, 0.75, 0.55);
+  }
+  // fio conectando bigode ao cavanhaque (linha fina)
+  mesh(G.box(0.018, 0.09, 0.015), mat, 0, 0.09, -0.01, g);
 }
 
 const LENS = () => M(0x0e1218, { emissive: 0x0a1424 });
@@ -250,4 +264,33 @@ function helmet(head, mat) {
   const h = mesh(G.sphere(0.51, 10, 7), mat, 0, FY + 0.07, -0.02, head); h.scale.set(1, 0.98, 1.02);
   const visor = mesh(G.box(0.66, 0.24, 0.12), M(0x223344, { emissive: 0x112233 }), 0, FY + 0.055, 0.45, head); visor.rotation.x = -0.15;
   mesh(G.box(0.095, 0.12, 0.74), M(0xffffff), 0, FY + 0.54, -0.02, head);
+}
+
+function hairWavyLong(head, mat, hi) {
+  // cabelo ondulado médio jogado pra trás — menos cotonete que pompadour
+  // calota principal: volume moderado, mais para trás e baixo que pompadour
+  const cap = mesh(G.sphere(0.43, 10, 7), mat, 0, FY + 0.1, -0.06, head); cap.scale.set(1.0, 0.68, 1.1);
+  // nuca: desce um pouco além da cabeça
+  const nape = mesh(G.sphere(0.36, 9, 6), mat, 0, FY - 0.06, -0.26, head); nape.scale.set(0.88, 0.88, 0.92);
+  // ondas frontais varridas para trás (achatadas horizontalmente, não para cima)
+  const front = [[-0.22, 0.26, 0.19], [-0.1, 0.32, 0.2], [0.01, 0.34, 0.21], [0.11, 0.31, 0.2], [0.22, 0.26, 0.18]];
+  for (const [x, y, z] of front) {
+    const w = mesh(G.sphere(0.1, 6, 5), mat, x, FY + y, z, head); w.scale.set(0.9, 0.72, 1.12);
+  }
+  // ondas no topo: espalhadas em altura moderada, varridas levemente para trás
+  const r = mulberry(42);
+  for (let i = 0; i < 14; i++) {
+    const a = r() * Math.PI * 2;
+    const d = 0.06 + r() * 0.22;
+    const x = Math.cos(a) * d;
+    const z = Math.sin(a) * d * 0.88 - 0.06;
+    const y = FY + 0.33 - d * d * 1.3;
+    const c = mesh(G.sphere(0.068 + r() * 0.038, 6, 4), i % 5 === 0 ? hi : mat, x, y, z, head);
+    c.scale.set(1.1, 0.62, 0.95);
+  }
+  // laterais cobrindo perto das orelhas
+  for (const s of [-1, 1]) {
+    mesh(G.sphere(0.15, 7, 5), mat, s * 0.33, FY + 0.09, 0.04, head).scale.set(0.62, 0.95, 1.08);
+    mesh(G.box(0.056, 0.13, 0.22), mat, s * 0.375, FY + 0.02, -0.02, head);
+  }
 }

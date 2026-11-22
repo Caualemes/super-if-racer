@@ -1,4 +1,4 @@
-// IFSP MOTO KART 64 — ponto de entrada: renderer, telas, corrida, resultado
+// Super IF Racer — ponto de entrada: renderer, telas, corrida, resultado
 import * as THREE from 'three';
 import './style.css';
 import { Track } from './track.js';
@@ -61,14 +61,14 @@ class Game {
   // ---------------- opções ----------------
   loadOptions() {
     let o = {};
-    try { o = JSON.parse(localStorage.getItem('ifsp64-opts') || '{}'); } catch (e) { /* sem storage */ }
-    this.opts = { music: o.music ?? '1', sfx: o.sfx ?? '1', retro: o.retro ?? '360', diff: o.diff ?? '1' };
-    $('opt-music').value = this.opts.music; $('opt-sfx').value = this.opts.sfx; $('opt-retro').value = this.opts.retro; $('opt-diff').value = this.opts.diff;
+    try { o = JSON.parse(localStorage.getItem('superifracer-opts') || '{}'); } catch (e) { /* sem storage */ }
+    this.opts = { music: o.music ?? '1', sfx: o.sfx ?? '1', diff: o.diff ?? '1' };
+    $('opt-music').value = this.opts.music; $('opt-sfx').value = this.opts.sfx; $('opt-diff').value = this.opts.diff;
     this.applyOptions();
   }
   applyOptions() {
-    this.opts = { music: $('opt-music').value, sfx: $('opt-sfx').value, retro: $('opt-retro').value, diff: $('opt-diff').value };
-    try { localStorage.setItem('ifsp64-opts', JSON.stringify(this.opts)); } catch (e) { /* ok */ }
+    this.opts = { music: $('opt-music').value, sfx: $('opt-sfx').value, diff: $('opt-diff').value };
+    try { localStorage.setItem('superifracer-opts', JSON.stringify(this.opts)); } catch (e) { /* ok */ }
     audio.setMusic(this.opts.music === '1'); audio.setSfx(this.opts.sfx === '1');
     this.difficulty = +this.opts.diff;
     this.resize();
@@ -76,7 +76,7 @@ class Game {
 
   resize() {
     const w = innerWidth, h = innerHeight;
-    const target = +(this.opts?.retro ?? 360);
+    const target = 360; // fixo em 360p
     const scale = target > 0 && h > target ? target / h : Math.min(devicePixelRatio, 1.5);
     this.renderer.setSize(Math.round(w * scale), Math.round(h * scale), false);
     this.camera.aspect = w / h;

@@ -8,9 +8,9 @@ export const DRIVERS = {
     quote: '"Bora que hoje não tem aula, tem corrida!"',
     pose: 'wave',
     look: {
-      skin: 0xd09a6e, hair: 'pompadour', hairColor: 0x141012, thickBrows: true, mustache: true,
-      glasses: 'aviator', suit: 0x55603a, suit2: 0x434c2c, boots: 0x161616, smile: true,
-      outfit: 'flightsuit', faceScale: [1, 1.0, 0.98], rideStyle: 'naked',
+      skin: 0xc8956a, hair: 'wavyLong', hairColor: 0x141012, thickBrows: true, mustache: true, goatee: true,
+      suit: 0x1a1215, suit2: 0x2a2230, pants: 0x3a5a9a, boots: 0xf0ede8, sole: 0xd4d0cc,
+      outfit: 'jacket', faceScale: [1, 1.0, 0.98], rideStyle: 'naked',
     },
     altPose: 'hips',
     bike: () => buildTrident(),
