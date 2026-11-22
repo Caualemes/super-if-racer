@@ -82,11 +82,11 @@ export function buildCharacter(def) {
     const b = mesh(G.box(0.155, bw, 0.048), browM, s * 0.148, FY + 0.16, 0.358, head);
     b.rotation.z = s * (def.serious ? 0.18 : -0.09); b.rotation.y = s * 0.28;
   }
-  // olhos (esclerótica branca + pupila escura) para chars sem óculos — dá expressão mesmo de longe
+  // olhos (esclerótica branca + pupila escura) para chars sem óculos
   if (!def.glasses) {
     for (const s of [-1, 1]) {
-      mesh(G.sphere(0.085, 7, 5), M(0xf0f0f0), s * 0.148, FY + 0.055, 0.375, head).scale.set(0.7, 0.75, 0.6);
-      mesh(G.sphere(0.065, 6, 4), M(0x1a1010), s * 0.148, FY + 0.045, 0.395, head).scale.set(0.6, 0.7, 0.55);
+      mesh(G.sphere(0.068, 7, 5), M(0xf0f0f0), s * 0.148, FY + 0.055, 0.382, head).scale.set(0.65, 0.68, 0.52);
+      mesh(G.sphere(0.048, 6, 4), M(0x1a1010), s * 0.148, FY + 0.048, 0.400, head).scale.set(0.55, 0.6, 0.46);
     }
   }
   // boca
@@ -110,7 +110,7 @@ export function buildCharacter(def) {
   if (def.mustache) mustache(head, M(def.hairColor ?? 0x141012));
   if (def.goatee) goatee(head, M(def.hairColor ?? 0x141012));
   if (def.glasses === 'aviator') aviators(head);
-  else if (def.glasses === 'wrap') wrapGlasses(head);
+  else if (def.glasses === 'wrap') wrapGlasses(head, def.glassesLens);
   if (def.hair === 'pompadour') hairPompadour(head, M(def.hairColor ?? 0x141012), M(shade(def.hairColor ?? 0x141012, 1.8)));
   else if (def.hair === 'wavyLong') hairWavyLong(head, M(def.hairColor ?? 0x141012), M(shade(def.hairColor ?? 0x141012, 1.6)));
   else if (def.hair === 'grayShort') hairGrayShort(head, def.hairColor ?? 0xb9bcc0);
@@ -202,9 +202,10 @@ function aviators(head) {
   mesh(G.box(0.06, 0.012, 0.018), frame, 0, FY + 0.074, 0.395, head);
 }
 
-function wrapGlasses(head) {
+function wrapGlasses(head, lensColor) {
   // óculos retangulares envolventes, armação preta grossa — escala para HR=0.40
-  const frame = M(0x141416), lens = LENS(), shine = M(0xffffff, { emissive: 0xaaaaaa });
+  const lc = lensColor ?? 0x0e1218;
+  const frame = M(0x141416), lens = M(lc, { emissive: shade(lc, 0.35) }), shine = M(0xffffff, { emissive: 0xaaaaaa });
   for (const s of [-1, 1]) {
     const g = new THREE.Group(); g.position.set(s * 0.148, FY + 0.045, 0.365); g.rotation.y = s * 0.3; head.add(g);
     mesh(G.box(0.224, 0.13, 0.03), frame, 0, 0, 0, g);
@@ -267,26 +268,25 @@ function helmet(head, mat) {
 }
 
 function hairWavyLong(head, mat, hi) {
-  // cabelo ondulado médio jogado pra trás — menos cotonete que pompadour
-  // calota principal: volume moderado, mais para trás e baixo que pompadour
-  const cap = mesh(G.sphere(0.43, 10, 7), mat, 0, FY + 0.1, -0.06, head); cap.scale.set(1.0, 0.68, 1.1);
-  // nuca: desce um pouco além da cabeça
-  const nape = mesh(G.sphere(0.36, 9, 6), mat, 0, FY - 0.06, -0.26, head); nape.scale.set(0.88, 0.88, 0.92);
-  // ondas frontais varridas para trás (achatadas horizontalmente, não para cima)
-  const front = [[-0.22, 0.26, 0.19], [-0.1, 0.32, 0.2], [0.01, 0.34, 0.21], [0.11, 0.31, 0.2], [0.22, 0.26, 0.18]];
+  // calota principal mais alta para cobrir o topo sem ficar careca
+  const cap = mesh(G.sphere(0.43, 10, 7), mat, 0, FY + 0.19, -0.06, head); cap.scale.set(1.02, 0.78, 1.1);
+  // nuca desce além da cabeça
+  const nape = mesh(G.sphere(0.36, 9, 6), mat, 0, FY - 0.04, -0.27, head); nape.scale.set(0.88, 0.88, 0.92);
+  // ondas frontais varridas pra trás, ligeiramente mais altas
+  const front = [[-0.22, 0.31, 0.19], [-0.1, 0.37, 0.21], [0.01, 0.39, 0.22], [0.11, 0.36, 0.21], [0.22, 0.31, 0.19]];
   for (const [x, y, z] of front) {
     const w = mesh(G.sphere(0.1, 6, 5), mat, x, FY + y, z, head); w.scale.set(0.9, 0.72, 1.12);
   }
-  // ondas no topo: espalhadas em altura moderada, varridas levemente para trás
+  // ondas no topo: mais densas e altas para cobrir o crown
   const r = mulberry(42);
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 18; i++) {
     const a = r() * Math.PI * 2;
-    const d = 0.06 + r() * 0.22;
+    const d = 0.04 + r() * 0.21;
     const x = Math.cos(a) * d;
-    const z = Math.sin(a) * d * 0.88 - 0.06;
-    const y = FY + 0.33 - d * d * 1.3;
-    const c = mesh(G.sphere(0.068 + r() * 0.038, 6, 4), i % 5 === 0 ? hi : mat, x, y, z, head);
-    c.scale.set(1.1, 0.62, 0.95);
+    const z = Math.sin(a) * d * 0.88 - 0.05;
+    const y = FY + 0.40 - d * d * 1.15;
+    const c = mesh(G.sphere(0.065 + r() * 0.04, 6, 4), i % 5 === 0 ? hi : mat, x, y, z, head);
+    c.scale.set(1.1, 0.65, 0.95);
   }
   // laterais cobrindo perto das orelhas
   for (const s of [-1, 1]) {

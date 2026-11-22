@@ -9,6 +9,7 @@ export const DRIVERS = {
     pose: 'wave',
     look: {
       skin: 0xc8956a, hair: 'wavyLong', hairColor: 0x141012, thickBrows: true, mustache: true, goatee: true,
+      glasses: 'wrap', glassesLens: 0x0a6b28,
       suit: 0x1a1215, suit2: 0x2a2230, pants: 0x3a5a9a, boots: 0xf0ede8, sole: 0xd4d0cc,
       outfit: 'jacket', faceScale: [1, 1.0, 0.98], rideStyle: 'naked',
     },
